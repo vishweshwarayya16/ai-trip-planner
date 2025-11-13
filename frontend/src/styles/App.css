@@ -923,3 +923,901 @@ body {
     font-size: 1.8rem;
   }
 }
+/* Weather Widget Styles */
+.weather-widget {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  margin: 2rem 0;
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+}
+
+.weather-widget.loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.weather-widget.error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 1rem;
+  text-align: center;
+}
+
+.weather-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.weather-title {
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.weather-forecasts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.weather-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  transition: transform 0.3s;
+}
+
+.weather-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.weather-date {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.weather-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+}
+
+.weather-temp {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+}
+
+.weather-desc {
+  text-transform: capitalize;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.weather-details {
+  display: flex;
+  justify-content: space-around;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+.weather-minmax {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.weather-tips {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 10px;
+  border-left: 4px solid rgba(255, 255, 255, 0.5);
+}
+
+.weather-tips p {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.weather-tips ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.weather-tips li {
+  padding: 0.25rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.weather-tips li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+}
+/* ✅ Number input styling (cross-browser safe) */
+input[type="number"] {
+  appearance: textfield;       /* Standard property */
+  -webkit-appearance: none;    /* For Chrome, Safari, Edge */
+  -moz-appearance: textfield;  /* For Firefox compatibility */
+  margin: 0;                   /* Removes extra spacing */
+}
+
+/* ✅ Remove inner/outer spin buttons (Chrome, Edge, Safari) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 💡 Traveler hint styling */
+.form-hint {
+  font-size: 0.85rem;
+  color: #667eea;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Location Search Styles */
+.location-search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.location-search-input {
+  width: 100%;
+  padding: 0.75rem;
+  padding-right: 2.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.location-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.search-loading {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.search-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.location-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: -2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 0;
+}
+
+.location-suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.location-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.location-suggestion-item:hover {
+  background-color: #f8f9ff;
+}
+
+.location-icon {
+  font-size: 1.2rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.location-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.location-name {
+  color: #333;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 1rem;
+  margin-top: -2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  text-align: center;
+  color: #666;
+}
+
+.no-suggestions p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar styling for suggestions */
+.location-suggestions::-webkit-scrollbar {
+  width: 8px;
+}
+
+.location-suggestions::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 0 10px 0;
+}
+
+.location-suggestions::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+.location-suggestions::-webkit-scrollbar-thumb:hover {
+  background: #5568d3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .location-suggestions {
+    max-height: 200px;
+  }
+  
+  .location-suggestion-item {
+    padding: 0.6rem 0.75rem;
+  }
+  
+  .location-name {
+    font-size: 0.9rem;
+  }
+}
+/* Progress Bar Styles */
+.progress-container {
+  margin-bottom: 3rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s;
+  z-index: 1;
+}
+
+.progress-step.active .step-circle {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.step-label {
+  font-size: 0.85rem;
+  color: #999;
+  text-align: center;
+  transition: color 0.3s;
+}
+
+.progress-step.active .step-label {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Step Content Styles */
+.step-content {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Trip Summary Styles */
+.trip-summary {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border-left: 4px solid #667eea;
+}
+
+.trip-summary p {
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.trip-summary strong {
+  color: #333;
+}
+
+.trip-summary-header {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 15px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.summary-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.summary-item small {
+  display: block;
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.summary-item strong {
+  display: block;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* Date Duration */
+.date-duration {
+  background: #e8f0fe;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.date-duration p {
+  margin: 0;
+  color: #1a73e8;
+  font-weight: 600;
+}
+
+/* Form Actions (Buttons) */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.back-button {
+  flex: 1;
+  padding: 1rem 2rem;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.back-button:hover {
+  background: #f8f9ff;
+  transform: translateY(-2px);
+}
+
+.next-button {
+  flex: 2;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.next-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.generate-final-button {
+  flex: 2;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.generate-final-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.generate-final-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Results Page Styles */
+.results-page .trip-result {
+  margin-top: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* Responsive Design for Multi-Step */
+@media (max-width: 768px) {
+  .progress-steps {
+    gap: 0.5rem;
+  }
+
+  .step-circle {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .step-label {
+    font-size: 0.75rem;
+  }
+
+  .trip-summary-header {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .back-button,
+  .next-button,
+  .generate-final-button {
+    flex: 1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .step-label {
+    display: none;
+  }
+
+  .progress-step {
+    flex: 0;
+  }
+
+  .step-circle {
+    margin-bottom: 0;
+  }
+}
+
+/* Travel Cost Highlighting */
+.trip-details strong {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.trip-details strong:contains("ESTIMATED TRAVEL COSTS"),
+.trip-details strong:contains("Total Cost") {
+  color: #dc2626;
+  font-size: 1.1em;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+}
+
+/* Cost Section Styling */
+.trip-details p:has(strong:contains("$")) {
+  background: #f0fdf4;
+  padding: 0.75rem;
+  border-left: 4px solid #10b981;
+  margin: 0.5rem 0;
+  border-radius: 5px;
+}
+
+/* Transportation Cost Cards */
+.trip-text:contains("Flight:"),
+.trip-text:contains("Train:"),
+.trip-text:contains("Bus:"),
+.trip-text:contains("Car/Taxi:") {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 0.5rem 0;
+  border-left: 4px solid #0284c7;
+}
+
+/* Budget section highlighting */
+.trip-heading:contains("ESTIMATED TRAVEL COSTS"),
+.trip-title:contains("ESTIMATED TRAVEL COSTS") {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 1rem;
+  border-radius: 10px;
+  color: #92400e;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(252, 211, 77, 0.3);
+}
+
+/* Trip Details Enhanced Styling */
+.trip-details {
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+/* Section Headers */
+.trip-details h2 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  margin: 2rem 0 1rem 0;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.trip-details h3 {
+  color: #667eea;
+  font-size: 1.3rem;
+  margin: 1.5rem 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* Day Headers */
+.trip-details h3:contains("Day") {
+  background: #f0f9ff;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #0284c7;
+  margin: 1.5rem 0 1rem 0;
+}
+
+/* Budget Sections - Highlighted */
+.trip-details strong:contains("$"),
+.trip-details strong:contains("BUDGET"),
+.trip-details strong:contains("LUXURY"),
+.trip-details strong:contains("MID-RANGE"),
+.trip-details strong:contains("Total"),
+.trip-details strong:contains("TRAVEL EXPENSES"),
+.trip-details strong:contains("ACCOMMODATION") {
+  color: #dc2626;
+  font-size: 1.1em;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 0.3rem 0.6rem;
+  border-radius: 5px;
+  display: inline-block;
+  margin: 0.2rem 0;
+}
+
+/* Price Tags */
+.trip-text:contains("$") {
+  background: #f0fdf4;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid #10b981;
+  margin: 0.5rem 0;
+  border-radius: 5px;
+}
+
+/* List Items with Numbers */
+.trip-list-item {
+  margin: 0.5rem 0 0.5rem 2rem;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 5px;
+  list-style-position: outside;
+}
+
+/* Hotel Recommendations */
+.trip-text:contains("Hotel"),
+.trip-text:contains("hotel") {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #0284c7;
+  margin: 0.5rem 0;
+}
+
+/* Transportation Sections */
+.trip-text:contains("Transportation"),
+.trip-text:contains("Journey") {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+/* Time-based Activities */
+.trip-text:contains("Morning"),
+.trip-text:contains("Afternoon"),
+.trip-text:contains("Evening") {
+  background: #f0f9ff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  font-weight: 600;
+  color: #0369a1;
+  margin: 0.5rem 0;
+}
+
+/* Budget Breakdown Cards */
+.trip-details div:has(strong:contains("BUDGET-FRIENDLY")),
+.trip-details div:has(strong:contains("MID-RANGE")),
+.trip-details div:has(strong:contains("LUXURY")) {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+  border: 2px solid #e0e0e0;
+}
+
+/* Section Dividers */
+.trip-details hr {
+  border: none;
+  border-top: 2px dashed #e0e0e0;
+  margin: 2rem 0;
+}
+
+/* Emphasis on Important Info */
+.trip-bold {
+  background: #fef3c7;
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  display: inline-block;
+  margin: 0.25rem 0;
+  font-weight: 700;
+  color: #92400e;
+}
+
+/* Tourist Attraction Cards */
+.trip-list-item:contains("Distance"),
+.trip-list-item:contains("Entry fee") {
+  background: white;
+  border: 1px solid #e0e0e0;
+  padding: 0.75rem;
+  margin: 0.5rem 0 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Warning/Note Boxes */
+.trip-text:contains("IMPORTANT"),
+.trip-text:contains("Note:"),
+.trip-text:contains("Tips:") {
+  background: #fef3c7;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+  margin: 1rem 0;
+  font-weight: 500;
+}
+
+/* Overview Box */
+.trip-text:contains("TRIP OVERVIEW") {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #0284c7;
+  margin: 1rem 0;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .trip-details h2 {
+    font-size: 1.3rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .trip-details h3 {
+    font-size: 1.1rem;
+  }
+
+  .trip-list-item {
+    margin-left: 1rem;
+    font-size: 0.95rem;
+  }
+}
+/* Rupee symbol highlighting */
+.trip-details strong:contains("₹"),
+.trip-text:contains("₹") {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* Cost sections with rupee */
+.trip-text:contains("Total cost for") {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #059669;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+/* Day headers */
+.trip-bold:contains("Day") {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  color: #1e40af;
+  font-size: 1.3rem;
+  border-left: 5px solid #3b82f6;
+  display: block;
+  margin: 1.5rem 0 1rem 0;
+}
+
+/* Best place for food */
+.trip-text:contains("Best place for") {
+  background: #fef3c7;
+  padding: 0.75rem;
+  border-left: 4px solid #f59e0b;
+  border-radius: 5px;
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+/* Hotel recommendations */
+.trip-text:contains("Recommended Hotel"),
+.trip-text:contains("LUXURY HOTELS"),
+.trip-text:contains("MID-RANGE HOTELS"),
+.trip-text:contains("BUDGET-FRIENDLY HOTELS") {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  padding: 1rem;
+  border-left: 4px solid #0284c7;
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Transportation sections */
+.trip-text:contains("BUS Transportation"),
+.trip-text:contains("TRAIN Transportation"),
+.trip-text:contains("CAR/TAXI Transportation"),
+.trip-text:contains("FLIGHT Transportation") {
+  background: #fef3c7;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  font-weight: 600;
+}
+
+/* Grand total highlighting */
+.trip-bold:contains("GRAND TOTAL"),
+.trip-bold:contains("LUXURY PACKAGE"),
+.trip-bold:contains("MID-RANGE PACKAGE"),
+.trip-bold:contains("BUDGET-FRIENDLY PACKAGE") {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  color: #92400e;
+  border: 2px solid #f59e0b;
+  display: block;
+  margin: 1rem 0;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Section dividers with styling */
+.section-divider {
+  border: none;
+  border-top: 3px solid #e0e0e0;
+  margin: 2rem 0;
+  background: linear-gradient(to right, transparent, #667eea, transparent);
+  height: 2px;
+}
+
+/* What to carry section */
+.trip-text:contains("What to Carry"),
+.trip-text:contains("Weather Advisory") {
+  background: #fef3c7;
+  padding: 1rem;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  margin: 1rem 0;
+}

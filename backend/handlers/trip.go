@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"trip-planner-backend/config"
@@ -141,4 +142,28 @@ func DeleteSavedTrip(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Trip deleted successfully",
 	})
+}
+
+// Add this function to handlers/trip.go
+
+func GetWeather(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	destination := vars["destination"]
+
+	if destination == "" {
+		http.Error(w, "Destination is required", http.StatusBadRequest)
+		return
+	}
+
+	weather, err := utils.GetWeatherForecast(destination)
+	if err != nil {
+		log.Printf("Weather error: %v", err)
+		// Don't fail the request, just return empty weather
+		weather = utils.WeatherData{
+			ErrorMsg: "Weather data not available",
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(weather)
 }

@@ -29,6 +29,7 @@ func main() {
 	router.HandleFunc("/api/forgot-password", handlers.ForgotPassword).Methods("POST")
 	router.HandleFunc("/api/verify-reset-code", handlers.VerifyResetCode).Methods("POST")
 	router.HandleFunc("/api/reset-password", handlers.ResetPassword).Methods("POST")
+	router.HandleFunc("/api/weather/{destination}", handlers.GetWeather).Methods("GET")
 
 	// Protected routes
 	protected := router.PathPrefix("/api").Subrouter()

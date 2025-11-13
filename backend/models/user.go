@@ -30,7 +30,7 @@ type TripRequest struct {
 	FinalDestination   string `json:"final_destination"`
 	StartDate          string `json:"start_date"`
 	EndDate            string `json:"end_date"`
-	TravelType         string `json:"travel_type"`
+	NumTravelers       int    `json:"num_travelers"` // Changed from TravelType
 	Mood               string `json:"mood"`
 }
 
