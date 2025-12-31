@@ -73,10 +73,10 @@ func GenerateTripWithGroq(tripReq models.TripRequest) (string, error) {
 		activities = "diverse tourist attractions and local experiences"
 	}
 
-	// Get travel information with costs
+	// Get distance info (no cost details passed to AI)
 	travelInfo := FormatTravelCostsForTripINR(tripReq.InitialDestination, tripReq.FinalDestination, tripReq.NumTravelers)
 
-	// Get weather info (we'll add it after the itinerary)
+	// Get weather info
 	weatherInfo := FormatWeatherForTrip(tripReq.FinalDestination)
 
 	prompt := fmt.Sprintf(`Create a personalized %d-day trip itinerary for %s from %s to %s.
@@ -85,14 +85,30 @@ This is for a %s trip focusing on these activities: %s.
 TRAVEL INFORMATION:
 %s
 
+IMPORTANT: DO NOT include any cost estimates, budget breakdowns, or accommodation prices in your response. Only provide the itinerary, attractions, and restaurant recommendations.
+
 Please include:
 1. A brief introduction to %s highlighting why it's perfect for this type of trip
-2. A day-by-day itinerary with clear Morning, Afternoon, and Evening sections for each day
-3. At least 5-7 specific attraction recommendations (within 100km of %s) with brief descriptions
-4. 3-5 restaurant recommendations that match the traveler's interests with specific dishes
-5. 2-3 insider tips that most tourists might not know about
+2. **TOP 5 MUST-VISIT PLACES** section (REQUIRED - place this right after the introduction)
+3. A day-by-day itinerary with clear Morning, Afternoon, and Evening sections for each day
+4. At least 5-7 specific attraction recommendations (within 100km of %s) with brief descriptions
+5. 3-5 restaurant recommendations with specific dishes (DO NOT include prices)
+6. 2-3 insider tips that most tourists might not know about
 
 IMPORTANT STRUCTURE:
+
+## 🌟 Top 5 Must-Visit Places
+
+RIGHT AFTER the introduction, include this section with EXACTLY this format:
+[MUSTVISIT]
+1. **Place Name** - One line description of why it's unmissable
+2. **Place Name** - One line description of why it's unmissable
+3. **Place Name** - One line description of why it's unmissable
+4. **Place Name** - One line description of why it's unmissable
+5. **Place Name** - One line description of why it's unmissable
+[/MUSTVISIT]
+
+---
 
 Day 1 should be: Journey from %s to %s
 - Include travel details and arrival
@@ -101,12 +117,11 @@ Day 1 should be: Journey from %s to %s
 
 Days 2 to %d should be: Exploration days
 Each day must have:
-- **Best place for Breakfast:** (restaurant name, famous dishes, cost)
+- **Best place for Breakfast:** (restaurant name, famous dishes - NO PRICES)
 - **Morning Activities:** (specific attraction with what it's famous for and what you can do)
-- **Best place for Lunch:** (restaurant name, famous dishes, cost)
+- **Best place for Lunch:** (restaurant name, famous dishes - NO PRICES)
 - **Afternoon Activities:** (another attraction)
-- **Best place for Dinner:** (restaurant name, famous dishes, cost)
-- **Day's estimated cost per person:** ₹[amount]
+- **Best place for Dinner:** (restaurant name, famous dishes - NO PRICES)
 
 Day %d should be: Return journey from %s back to %s
 - Breakfast recommendation
@@ -116,171 +131,27 @@ Day %d should be: Return journey from %s back to %s
 Format the response with clear markdown formatting:
 - Use # for main title (Trip to %s)
 - Use ## for day headers (Day 1: Journey to %s, Day 2: Explore [Location], etc.)
-- Use ### for section headers (Morning, Afternoon, Evening, Travel Expenses, Accommodation, Budget)
-- Use **bold** for restaurant names, costs, hotel names, and important information
+- Use ### for section headers (Morning, Afternoon, Evening)
+- Use **bold** for restaurant names, attraction names, and important information
 - Use bullet points (- ) for lists
 - Use --- for section dividers
-- Prefix insider tips with "💡 **Insider Tip:**"
-- Highlight all monetary amounts with **₹[amount]**
+- Prefix insider tips with "**Insider Tip:**"
 
-TRAVEL EXPENSES SECTION (After itinerary):
-## 💰 Travel Expenses
-
-### Transportation Options from %s to %s:
-
-**🚌 Bus Transportation:**
-- Cost per person: **₹[amount]**
-- **Total cost for %d persons: ₹[total]**
-- Duration: [X hours]
-- Comfort level: Budget-friendly
-
-**🚂 Train Transportation:**
-- Cost per person: **₹[amount]**
-- **Total cost for %d persons: ₹[total]**
-- Duration: [X hours]
-- Comfort level: Recommended for balance of cost and comfort
-
-**🚗 Car/Taxi Transportation:**
-- Total cost for group: **₹[amount]**
-- **Cost split among %d persons: ₹[amount] per person**
-- Duration: [X hours]
-- Comfort level: Most convenient, door-to-door
-
-**✈️ Flight Transportation (if available):**
-- Cost per person: **₹[amount]**
-- **Total cost for %d persons: ₹[total]**
-- Duration: [X hours]
-- Comfort level: Fastest option
-
-**Recommended Transportation:** [Specify the best option]
-
----
-
-ACCOMMODATION EXPENSES SECTION:
-## 🏨 Accommodation Expenses
-
-For **%d nights** stay in %s:
-
-### 🌟 Luxury Hotels
-
-**1. [Real luxury hotel name like Taj/Oberoi/ITC]**
-- Location: [Specific area in %s]
-- Cost per night: **₹[amount]**
-- Total for %d nights: **₹[amount]**
-- **Total cost for %d persons: ₹[amount]**
-- Amenities: [List key amenities]
-- Why stay here: [Brief description]
-
-**2. [Another luxury hotel]**
-[Same format]
-
-### 🏨 Mid-Range Hotels
-
-**1. [Real mid-range hotel like Lemon Tree/Treebo/FabHotels]**
-- Location: [Area]
-- Cost per night: **₹[amount]**
-- Total for %d nights: **₹[amount]**
-- **Total cost for %d persons: ₹[amount]**
-- Amenities: [List]
-
-**2. [Another mid-range hotel]**
-[Same format]
-
-### 💼 Budget-Friendly Hotels
-
-**1. [Real budget hotel like OYO/Zostel/Backpacker hostels]**
-- Location: [Area]
-- Cost per night: **₹[amount]**
-- Total for %d nights: **₹[amount]**
-- **Total cost for %d persons: ₹[amount]**
-- Amenities: [List]
-
-**2. [Another budget hotel]**
-[Same format]
-
----
-
-COMPLETE BUDGET BREAKDOWN:
-## 📊 Complete Trip Budget for %d Persons
-
-### 🏷️ LUXURY PACKAGE
-**Total Trip Cost: ₹[amount]**
-**Per Person: ₹[amount]**
-
-Breakdown:
-- **Transportation:** ₹[amount]
-- **Accommodation (%d nights):** ₹[amount]
-- **Food & Dining:** ₹[amount] (₹[amount] per person per day × %d days)
-- **Attractions & Entry Fees:** ₹[amount]
-- **Local Transportation:** ₹[amount]
-- **Miscellaneous (Shopping, etc):** ₹[amount]
-
-Includes: Luxury hotels, premium dining, private transport, all activities
-
----
-
-### 🏷️ MID-RANGE PACKAGE
-**Total Trip Cost: ₹[amount]**
-**Per Person: ₹[amount]**
-
-Breakdown:
-- **Transportation:** ₹[amount]
-- **Accommodation (%d nights):** ₹[amount]
-- **Food & Dining:** ₹[amount]
-- **Attractions & Entry Fees:** ₹[amount]
-- **Local Transportation:** ₹[amount]
-- **Miscellaneous:** ₹[amount]
-
-Includes: Comfortable hotels, good restaurants, recommended transport, most activities
-
----
-
-### 🏷️ BUDGET-FRIENDLY PACKAGE
-**Total Trip Cost: ₹[amount]**
-**Per Person: ₹[amount]**
-
-Breakdown:
-- **Transportation:** ₹[amount]
-- **Accommodation (%d nights):** ₹[amount]
-- **Food & Dining:** ₹[amount]
-- **Attractions & Entry Fees:** ₹[amount]
-- **Local Transportation:** ₹[amount]
-- **Miscellaneous:** ₹[amount]
-
-Includes: Budget hotels, local eateries, public transport, essential activities
-
----
-
-## 💡 Money-Saving Tips
-- Book transportation and accommodation at least 15-30 days in advance
-- Travel during off-peak season for better rates
-- Use public transport for local travel
-- Eat at local restaurants instead of tourist spots
-- Look for combo tickets for multiple attractions
-- Bargain at local markets
-- Carry reusable water bottle
-
----
-
-## 📝 Important Notes
-- All prices are approximate and in Indian Rupees (₹)
-- Prices may vary based on season, availability, and booking time
-- Keep 10-15%% extra budget for emergencies and unexpected expenses
-- Check attraction timings and closed days before visiting
-- Book popular attractions in advance during peak season
-- Carry valid ID proofs and necessary documents
+DO NOT INCLUDE:
+- Any prices or costs
+- Budget breakdowns
+- Accommodation costs
+- Transportation costs
+- Entry fees
 
 IMPORTANT: 
 - Make the content detailed and specific to %s
-- Use real hotel names and restaurant names in %s
+- Use real restaurant names in %s
 - Attractions should be within 100km of %s
-- Each exploration day must have breakfast, lunch, and dinner recommendations
+- Each exploration day must have breakfast, lunch, and dinner recommendations (NO PRICES)
 - Day 1 is arrival/journey, last day is departure/return
-- Include realistic prices for Indian destinations
-- Match the travel preferences: %s
 - DO NOT use HTML tags, use markdown formatting only
 - Use ** for bold, # for headers, - for bullets
-- Make sure all costs are clearly highlighted with **₹[amount]**
 
 This is a %d-day itinerary focused on %s for %d travelers.`,
 		duration,
@@ -300,31 +171,9 @@ This is a %d-day itinerary focused on %s for %d travelers.`,
 		tripReq.InitialDestination,
 		tripReq.FinalDestination,
 		tripReq.FinalDestination,
-		tripReq.InitialDestination,
-		tripReq.FinalDestination,
-		tripReq.NumTravelers,
-		tripReq.NumTravelers,
-		tripReq.NumTravelers,
-		tripReq.NumTravelers,
-		duration-1,
-		tripReq.FinalDestination,
-		tripReq.FinalDestination,
-		duration-1,
-		tripReq.NumTravelers,
-		duration-1,
-		tripReq.NumTravelers,
-		duration-1,
-		tripReq.NumTravelers,
-		tripReq.NumTravelers,
-		duration-1,
-		duration,
-		duration-1,
-		duration,
-		duration-1,
 		tripReq.FinalDestination,
 		tripReq.FinalDestination,
 		tripReq.FinalDestination,
-		activities,
 		duration,
 		activities,
 		tripReq.NumTravelers,
@@ -336,20 +185,17 @@ This is a %d-day itinerary focused on %s for %d travelers.`,
 			{
 				Role: "system",
 				Content: fmt.Sprintf(`You are a professional Indian travel planner. Create detailed itineraries using markdown formatting (NO HTML tags).
-- Use real Indian hotel names: Taj, Oberoi, ITC, Leela for luxury; Lemon Tree, Treebo, FabHotels for mid-range; OYO, Zostel for budget
 - Use real restaurant names in %s with specific dishes
-- All prices in Indian Rupees (₹)
 - Attractions within 100km of %s
 - Focus on %s activities
 - Day 1 is journey/arrival day with travel details
 - Middle days are full exploration with morning/afternoon/evening structure
-- Each exploration day MUST have specific breakfast, lunch, dinner places with restaurant names and costs
+- Each exploration day MUST have specific breakfast, lunch, dinner places (NO PRICES)
 - Last day is return journey with breakfast and departure
-- Include realistic Indian pricing
 - Use markdown formatting: # for titles, ## for day headers, ### for subsections, ** for bold, - for bullets
-- DO NOT use HTML tags like <h1>, <p>, <div>, <strong> etc.
-- Use only plain text with markdown symbols
-- Highlight all costs with **₹[amount]**`, tripReq.FinalDestination, tripReq.FinalDestination, activities),
+- DO NOT include any prices, costs, budget information, or accommodation costs
+- DO NOT use HTML tags
+- mention entry fees or ticket prices`, tripReq.FinalDestination, tripReq.FinalDestination, activities),
 			},
 			{
 				Role:    "user",
@@ -396,21 +242,55 @@ This is a %d-day itinerary focused on %s for %d travelers.`,
 		return "", fmt.Errorf("no response from Groq API")
 	}
 
-	// Get the trip content
+	// Get the trip content WITHOUT expenses
 	tripContent := groqResp.Choices[0].Message.Content
 
-	// Append weather information at the end
-	tripContent += fmt.Sprintf(`
+	// Now ADD the manual travel expense calculation
+	costs, _ := CalculateTravelCosts(tripReq.InitialDestination, tripReq.FinalDestination, tripReq.NumTravelers)
+
+	travelExpenseSection := fmt.Sprintf(`
 
 ---
 
-## 🌤️ Weather Information
+## Travel Expenses
+
+**Route:** %s → %s | **Distance:** %.2f km | **Travelers:** %d
+
+| Transport | Duration | Cost/Person (₹) | Total Cost (₹) |
+|-----------|----------|-----------------|----------------|
+| 🚗 Car    | %s       | %.0f            | %.0f           |
+| 🚌 Bus    | %s       | %.0f            | %.0f           |
+| 🚆 Train  | %s       | %.0f            | %.0f           |
+
+**💡 Recommendation:** Train offers the best balance of cost and comfort for this journey.
+
+---
+
+## Weather Information
 
 %s
 
 **Packing Recommendations:**
 Based on the weather forecast above, make sure to pack appropriate clothing and gear. Check the weather closer to your travel dates for the most accurate information.
-`, weatherInfo)
+`,
+		tripReq.InitialDestination,
+		tripReq.FinalDestination,
+		costs.Distance,
+		tripReq.NumTravelers,
+		costs.CarDuration,
+		costs.CarCost/float64(tripReq.NumTravelers),
+		costs.CarCost,
+		costs.BusDuration,
+		costs.BusCost/float64(tripReq.NumTravelers),
+		costs.BusCost,
+		costs.TrainDuration,
+		costs.TrainCost/float64(tripReq.NumTravelers),
+		costs.TrainCost,
+		weatherInfo,
+	)
+
+	// Append manual calculations to the AI-generated content
+	tripContent += travelExpenseSection
 
 	return tripContent, nil
 }

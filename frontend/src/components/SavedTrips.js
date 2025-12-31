@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { generateTripPDFFromSaved } from '../utils/pdfGenerator';
 
 function SavedTrips() {
   const [trips, setTrips] = useState([]);
@@ -9,7 +10,7 @@ function SavedTrips() {
   const [error, setError] = useState('');
   const [selectedTrip, setSelectedTrip] = useState(null);
 
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,9 +18,22 @@ function SavedTrips() {
       navigate('/login');
       return;
     }
+    if (user?.role && user.role !== 'user') {
+      navigate('/');
+      return;
+    }
     fetchSavedTrips();
-  }, [isAuthenticated, navigate, token]);
+  }, [isAuthenticated, user, navigate, token]);
+/*helper function for pdf */
+const extractDestination = (tripDetails) => {
+  const match = tripDetails.match(/to\s+([A-Za-z\s]+)/i);
+  return match ? match[1].trim() : 'Destination';
+};
 
+const extractDate = (savedAt, type) => {
+  return new Date(savedAt).toLocaleDateString();
+};
+/*end of helper function for pdf export*/
   const fetchSavedTrips = async () => {
     try {
       const response = await axios.get(
@@ -145,7 +159,7 @@ function SavedTrips() {
             ))}
           </div>
 
-          {selectedTrip && (
+          {/*selectedTrip && (
             <div className="trip-details-panel">
               <div className="trip-details-header">
                 <h3>Trip Details</h3>
@@ -160,7 +174,53 @@ function SavedTrips() {
                 {formatTripDetails(selectedTrip.tripdetails)}
               </div>
             </div>
-          )}
+          )*/}
+          {selectedTrip && (
+  <div className="trip-details-panel">
+    <div className="trip-details-header">
+      <h3>Trip Details</h3>
+      <div className="trip-header-actions">
+        <button
+          onClick={() => generateTripPDFFromSaved(selectedTrip.tripdetails, {
+            destination: extractDestination(selectedTrip.tripdetails),
+            startDate: extractDate(selectedTrip.saved_at, 'start'),
+            endDate: extractDate(selectedTrip.saved_at, 'end'),
+            travelers: 'N/A',
+            mood: 'Travel'
+          })}
+          className="download-pdf-btn-small"
+          title="Download as PDF"
+        >
+          📥
+        </button>
+        <button
+          onClick={() => setSelectedTrip(null)}
+          className="close-button"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+    <div className="trip-details-content">
+      {formatTripDetails(selectedTrip.tripdetails)}
+    </div>
+    
+    {/* Download button at bottom too */}
+    <div className="trip-details-footer">
+      <button
+        onClick={() => generateTripPDFFromSaved(selectedTrip.tripdetails, {
+          destination: extractDestination(selectedTrip.tripdetails),
+          startDate: new Date(selectedTrip.saved_at).toLocaleDateString(),
+          endDate: new Date(selectedTrip.saved_at).toLocaleDateString(),
+          travelers: 'N/A'
+        })}
+        className="download-pdf-button-full"
+      >
+        📥 Download Trip as PDF
+      </button>
+    </div>
+  </div>
+)}
         </div>
       )}
     </div>

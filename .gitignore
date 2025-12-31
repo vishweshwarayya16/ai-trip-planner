@@ -1,0 +1,19 @@
+# React
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# Go
+backend/bin/
+backend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+.idea/

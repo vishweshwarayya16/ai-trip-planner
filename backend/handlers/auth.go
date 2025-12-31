@@ -18,10 +18,132 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+func SendRegistrationOTP(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if req.Email == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+
+	// Check if email already exists
+	var exists bool
+	err := config.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", req.Email).Scan(&exists)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if exists {
+		http.Error(w, "Email already registered", http.StatusConflict)
+		return
+	}
+
+	// Generate 6-digit OTP
+	otpCode := fmt.Sprintf("%06d", 100000+rand.Intn(900000))
+
+	// Store OTP with 15 minute expiry
+	expiresAt := time.Now().Add(15 * time.Minute)
+	_, err = config.DB.Exec(
+		"INSERT INTO registration_otps (email, otp_code, expires_at, user_type) VALUES ($1, $2, $3, $4)",
+		req.Email, otpCode, expiresAt, "user",
+	)
+	if err != nil {
+		log.Printf("Error storing OTP: %v", err)
+		http.Error(w, "Failed to generate OTP", http.StatusInternalServerError)
+		return
+	}
+
+	// Send email
+	name := req.Name
+	if name == "" {
+		name = "User"
+	}
+	err = utils.SendRegistrationOTPEmail(req.Email, name, otpCode)
+	if err != nil {
+		log.Printf("Error sending email: %v", err)
+		http.Error(w, "Failed to send OTP email. Please try again.", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("✅ Registration OTP sent to: %s | Code: %s", req.Email, otpCode)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "OTP has been sent to your email",
+	})
+}
+
+func VerifyRegistrationOTP(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+		OTP   string `json:"otp"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Check if OTP exists and is valid
+	var id int
+	var expiresAt time.Time
+	var used bool
+
+	err := config.DB.QueryRow(
+		"SELECT id, expires_at, used FROM registration_otps WHERE email = $1 AND otp_code = $2 AND user_type = $3 ORDER BY created_at DESC LIMIT 1",
+		req.Email, req.OTP, "user",
+	).Scan(&id, &expiresAt, &used)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Invalid OTP", http.StatusBadRequest)
+		return
+	}
+
+	if used {
+		http.Error(w, "OTP already used", http.StatusBadRequest)
+		return
+	}
+
+	if time.Now().After(expiresAt) {
+		http.Error(w, "OTP expired", http.StatusBadRequest)
+		return
+	}
+
+	// Mark OTP as used
+	_, err = config.DB.Exec("UPDATE registration_otps SET used = true WHERE id = $1", id)
+	if err != nil {
+		log.Printf("Warning: Failed to mark OTP as used: %v", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "OTP verified successfully",
+	})
+}
+
 func Register(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Verify OTP was used
+	var otpVerified bool
+	err := config.DB.QueryRow(
+		"SELECT EXISTS(SELECT 1 FROM registration_otps WHERE email = $1 AND user_type = $2 AND used = true ORDER BY created_at DESC LIMIT 1)",
+		user.Email, "user",
+	).Scan(&otpVerified)
+	if err != nil || !otpVerified {
+		http.Error(w, "Please verify your email with OTP first", http.StatusBadRequest)
 		return
 	}
 
@@ -45,7 +167,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.UserID, user.Username)
+	token, err := utils.GenerateJWT(user.UserID, user.Username, "user")
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
@@ -53,10 +175,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"token":    token,
-		"userid":   user.UserID,
-		"username": user.Username,
-		"message":  "Registration successful",
+		"token":     token,
+		"userid":    user.UserID,
+		"username":  user.Username,
+		"firstname": user.FirstName,
+		"lastname":  user.LastName,
+		"email":     user.Email,
+		"role":      "user",
+		"message":   "Registration successful",
 	})
 }
 
@@ -88,7 +214,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.UserID, user.Username)
+	token, err := utils.GenerateJWT(user.UserID, user.Username, "user")
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
@@ -101,6 +227,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"username":  user.Username,
 		"firstname": user.FirstName,
 		"lastname":  user.LastName,
+		"email":     user.Email,
+		"role":      "user",
 		"message":   "Login successful",
 	})
 }

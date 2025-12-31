@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"trip-planner-backend/config"
 	"trip-planner-backend/models"
 	"trip-planner-backend/utils"
@@ -166,4 +169,107 @@ func GetWeather(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(weather)
+}
+
+// District name mapping from dropdown values to folder names
+var districtFolderMap = map[string]string{
+	"Bagalkot":                "Bagalkot",
+	"Ballari (Bellary)":       "Ballari",
+	"Belagavi (Belgaum)":      "Belagavi",
+	"Bengaluru Rural":         "Bengaluru Rural",
+	"Bengaluru Urban":         "Bengaluru Urban",
+	"Bidar":                   "Bidar",
+	"Chamarajanagar":          "Chamarajanagar",
+	"Chikkaballapur":          "Chikkaballapur",
+	"Chikkamagaluru":          "Chikkamagaluru",
+	"Chitradurga":             "Chitradurga",
+	"Dakshina Kannada":        "Dakshina Kannada",
+	"Davanagere":              "Davanagere",
+	"Dharwad":                 "Dharwad",
+	"Gadag":                   "Gadag",
+	"Hassan":                  "Hassan",
+	"Haveri":                  "Haveri",
+	"Kalaburagi (Gulbarga)":   "Kalaburagi",
+	"Kodagu (Coorg)":          "Kodagu",
+	"Kolar":                   "Kolar",
+	"Koppal":                  "Koppal",
+	"Mandya":                  "Mandya",
+	"Mysuru (Mysore)":         "Mysuru",
+	"Raichur":                 "Raichur",
+	"Ramanagara":              "Ramanagara",
+	"Shivamogga (Shimoga)":    "Shivamogga",
+	"Tumakuru (Tumkur)":       "Tumakuru",
+	"Udupi":                   "Udupi",
+	"Uttara Kannada (Karwar)": "Uttara Kannada",
+	"Vijayapura (Bijapur)":    "Vijayapura",
+	"Yadgir":                  "Yadgir",
+	"Vijayanagara":            "Vijayanagara",
+}
+
+func GetDistrictPhotos(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	district := vars["district"]
+
+	if district == "" {
+		http.Error(w, "District is required", http.StatusBadRequest)
+		return
+	}
+
+	// Map the district name to folder name
+	folderName, exists := districtFolderMap[district]
+	if !exists {
+		// Try using the district name directly
+		folderName = district
+	}
+
+	districtPath := filepath.Join("uploads", "districts", folderName)
+
+	// Check if directory exists
+	if _, err := os.Stat(districtPath); os.IsNotExist(err) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"photos":   []string{},
+			"district": district,
+		})
+		return
+	}
+
+	// Read directory
+	files, err := os.ReadDir(districtPath)
+	if err != nil {
+		log.Printf("Error reading district folder: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"photos":   []string{},
+			"district": district,
+		})
+		return
+	}
+
+	// Filter image files and limit to 5
+	var photos []string
+	imageExtensions := []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		ext := strings.ToLower(filepath.Ext(file.Name()))
+		for _, imgExt := range imageExtensions {
+			if ext == imgExt {
+				photos = append(photos, file.Name())
+				break
+			}
+		}
+		// Limit to 5 photos
+		if len(photos) >= 5 {
+			break
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"photos":   photos,
+		"district": district,
+		"folder":   folderName,
+	})
 }

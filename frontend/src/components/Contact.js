@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 function Contact() {
+  const { user, isAuthenticated } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -8,23 +12,78 @@ function Contact() {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Pre-fill name and email for logged-in users/agencies
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      let userName = '';
+      let userEmail = '';
+
+      if (user.role === 'agency') {
+        // For agencies: use agency name and email
+        userName = user.name || user.agency?.name || '';
+        userEmail = user.email || user.agency?.email || '';
+      } else {
+        // For regular users: use firstname + lastname or username
+        if (user.firstname && user.lastname) {
+          userName = `${user.firstname} ${user.lastname}`;
+        } else if (user.username) {
+          userName = user.username;
+        }
+        userEmail = user.email || '';
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        name: userName,
+        email: userEmail
+      }));
+    }
+  }, [user, isAuthenticated]);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Prevent editing name and email if user is logged in
+    if (isAuthenticated && (name === 'name' || name === 'email')) {
+      return;
+    }
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Contact form submitted:', formData);
-    setSubmitted(true);
-    setFormData({ name: '', email: '', subject: '', message: '' });
-    
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 5000);
+    setLoading(true);
+    setError('');
+
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/contact`,
+        formData
+      );
+      
+      setSubmitted(true);
+      // Keep name and email, clear only subject and message
+      setFormData(prev => ({ 
+        ...prev, 
+        subject: '', 
+        message: '' 
+      }));
+      
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 5000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to send message. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,6 +100,8 @@ function Contact() {
           </div>
         )}
 
+        {error && <p className="error-message">{error}</p>}
+
         <div className="contact-layout">
           <div className="contact-form-section">
             <form onSubmit={handleSubmit} className="contact-form">
@@ -53,7 +114,12 @@ function Contact() {
                   onChange={handleChange}
                   required
                   placeholder="Your name"
+                  readOnly={isAuthenticated}
+                  className={isAuthenticated ? 'input-readonly' : ''}
                 />
+                {isAuthenticated && (
+                  <span className="field-locked-hint">🔒 Auto-filled from your account</span>
+                )}
               </div>
 
               <div className="form-group">
@@ -65,7 +131,12 @@ function Contact() {
                   onChange={handleChange}
                   required
                   placeholder="your.email@example.com"
+                  readOnly={isAuthenticated}
+                  className={isAuthenticated ? 'input-readonly' : ''}
                 />
+                {isAuthenticated && (
+                  <span className="field-locked-hint">🔒 Auto-filled from your account</span>
+                )}
               </div>
 
               <div className="form-group">
@@ -92,8 +163,8 @@ function Contact() {
                 />
               </div>
 
-              <button type="submit" className="submit-button">
-                Send Message
+              <button type="submit" className="submit-button" disabled={loading}>
+                {loading ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           </div>

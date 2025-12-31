@@ -1,70 +1,194 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"net/http"
+	"os"
 )
-
-type TravelCost struct {
-	Transportation string  `json:"transportation"`
-	EstimatedCost  float64 `json:"estimated_cost"`
-	Currency       string  `json:"currency"`
-	Duration       string  `json:"duration"`
-	Details        string  `json:"details"`
-}
 
 type LocationCoordinates struct {
 	Lat float64
 	Lon float64
 }
 
-// Get coordinates for a location using Nominatim
-func getCoordinates(location string) (LocationCoordinates, error) {
-	url := fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=1", location)
+type TravelCostCalculation struct {
+	Distance      float64 `json:"distance"`
+	BusCost       float64 `json:"bus_cost"`
+	TrainCost     float64 `json:"train_cost"`
+	CarCost       float64 `json:"car_cost"`
+	BusDuration   string  `json:"bus_duration"`
+	TrainDuration string  `json:"train_duration"`
+	CarDuration   string  `json:"car_duration"`
+}
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return LocationCoordinates{}, err
+// District coordinates (longitude, latitude) for Karnataka districts
+var districtCoordinates = map[string][]float64{
+	"Bagalkot":                {75.6615, 16.1691},
+	"Ballari (Bellary)":       {76.9214, 15.1394},
+	"Belagavi (Belgaum)":      {74.4977, 15.8497},
+	"Bengaluru Rural":         {77.3910, 13.2257},
+	"Bengaluru Urban":         {77.5946, 12.9716},
+	"Bidar":                   {77.5199, 17.9104},
+	"Chamarajanagar":          {76.9398, 11.9261},
+	"Chikkaballapur":          {77.7278, 13.4355},
+	"Chikkamagaluru":          {75.7747, 13.3161},
+	"Chitradurga":             {76.3980, 14.2251},
+	"Dakshina Kannada":        {74.8560, 12.9141},
+	"Davanagere":              {75.9218, 14.4644},
+	"Dharwad":                 {75.0078, 15.4589},
+	"Gadag":                   {75.6290, 15.4166},
+	"Hassan":                  {76.0996, 13.0068},
+	"Haveri":                  {75.3990, 14.7951},
+	"Kalaburagi (Gulbarga)":   {76.8343, 17.3297},
+	"Kodagu (Coorg)":          {75.7382, 12.4244},
+	"Kolar":                   {78.1290, 13.1360},
+	"Koppal":                  {76.1548, 15.3550},
+	"Mandya":                  {76.8958, 12.5218},
+	"Mysuru (Mysore)":         {76.6394, 12.2958},
+	"Raichur":                 {77.3566, 16.2120},
+	"Ramanagara":              {77.2826, 12.7159},
+	"Shivamogga (Shimoga)":    {75.5681, 13.9299},
+	"Tumakuru (Tumkur)":       {77.1010, 13.3379},
+	"Udupi":                   {74.7421, 13.3409},
+	"Uttara Kannada (Karwar)": {74.1240, 14.8182},
+	"Vijayapura (Bijapur)":    {75.7100, 16.8302},
+	"Yadgir":                  {77.1383, 16.7700},
+	"Vijayanagara":            {76.4700, 15.3350},
+}
+
+// OpenRouteService response structure
+type OpenRouteResponse struct {
+	Routes []struct {
+		Summary struct {
+			Distance float64 `json:"distance"`
+			Duration float64 `json:"duration"`
+		} `json:"summary"`
+	} `json:"routes"`
+}
+
+// Get driving distance using OpenRouteService API
+func getOpenRouteDistance(fromCoords, toCoords []float64) (float64, float64, error) {
+	apiKey := os.Getenv("OPENROUTE_API_KEY")
+	if apiKey == "" {
+		return 0, 0, fmt.Errorf("OPENROUTE_API_KEY not set")
 	}
-	req.Header.Set("User-Agent", "TripPlannerApp/1.0")
+
+	requestBody := map[string]interface{}{
+		"coordinates": [][]float64{
+			{fromCoords[0], fromCoords[1]},
+			{toCoords[0], toCoords[1]},
+		},
+	}
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	req, err := http.NewRequest("POST", "https://api.openrouteservice.org/v2/directions/driving-car", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	req.Header.Set("Authorization", apiKey)
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return LocationCoordinates{}, err
+		return 0, 0, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return LocationCoordinates{}, err
+		return 0, 0, err
 	}
 
-	var results []struct {
-		Lat string `json:"lat"`
-		Lon string `json:"lon"`
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("OpenRouteService error: %s", string(body))
+		return 0, 0, fmt.Errorf("OpenRouteService API error: %d", resp.StatusCode)
 	}
 
-	if err := json.Unmarshal(body, &results); err != nil {
-		return LocationCoordinates{}, err
+	var orsResp OpenRouteResponse
+	if err := json.Unmarshal(body, &orsResp); err != nil {
+		return 0, 0, err
 	}
 
-	if len(results) == 0 {
-		return LocationCoordinates{}, fmt.Errorf("location not found")
+	if len(orsResp.Routes) == 0 {
+		return 0, 0, fmt.Errorf("no route found")
 	}
 
-	var coords LocationCoordinates
-	fmt.Sscanf(results[0].Lat, "%f", &coords.Lat)
-	fmt.Sscanf(results[0].Lon, "%f", &coords.Lon)
+	distanceKm := orsResp.Routes[0].Summary.Distance / 1000
+	durationHours := orsResp.Routes[0].Summary.Duration / 3600
 
-	return coords, nil
+	return distanceKm, durationHours, nil
 }
 
-// Calculate distance between two coordinates (Haversine formula)
-func calculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
+// Calculate travel costs using OpenRouteService for distance
+func CalculateTravelCosts(from, to string, numTravelers int) (TravelCostCalculation, error) {
+	// Get coordinates from our predefined map
+	fromCoords, fromExists := districtCoordinates[from]
+	toCoords, toExists := districtCoordinates[to]
+
+	if !fromExists || !toExists {
+		log.Printf("Coordinates not found for: %s or %s", from, to)
+		// Return default values if coordinates not found
+		return TravelCostCalculation{
+			Distance:      500.0,
+			BusCost:       750.0 * float64(numTravelers),
+			TrainCost:     350.0 * float64(numTravelers),
+			CarCost:       4583.33,
+			BusDuration:   "8-10 hours",
+			TrainDuration: "6-8 hours",
+			CarDuration:   "7-9 hours",
+		}, nil
+	}
+
+	// Get actual driving distance from OpenRouteService
+	distance, durationHours, err := getOpenRouteDistance(fromCoords, toCoords)
+	if err != nil {
+		log.Printf("OpenRouteService error: %v, falling back to estimation", err)
+		// Fallback: estimate distance based on coordinates (straight line * 1.3 for road factor)
+		distance = calculateHaversineDistance(fromCoords[1], fromCoords[0], toCoords[1], toCoords[0]) * 1.3
+		durationHours = distance / 60 // Assume 60 km/h average
+	}
+
+	// YOUR FORMULAS:
+	// BUS: distance * 1.5 (per person)
+	busCostPerPerson := distance * 1.5
+	busTotalCost := busCostPerPerson * float64(numTravelers)
+
+	// TRAIN: distance * 0.7 (per person)
+	trainCostPerPerson := distance * 0.7
+	trainTotalCost := trainCostPerPerson * float64(numTravelers)
+
+	// CAR: (distance / 12) * 110 (total for group)
+	carTotalCost := (distance / 12) * 110
+
+	// Calculate durations based on actual driving time from API (or estimate)
+	carDuration := formatDuration(durationHours)
+	busDuration := formatDuration(durationHours * 1.2)   // Bus is ~20% slower than car
+	trainDuration := formatDuration(durationHours * 0.9) // Train is ~10% faster than car
+
+	return TravelCostCalculation{
+		Distance:      math.Round(distance*10) / 10, // Round to 1 decimal
+		BusCost:       math.Round(busTotalCost*100) / 100,
+		TrainCost:     math.Round(trainTotalCost*100) / 100,
+		CarCost:       math.Round(carTotalCost*100) / 100,
+		BusDuration:   busDuration,
+		TrainDuration: trainDuration,
+		CarDuration:   carDuration,
+	}, nil
+}
+
+// Calculate Haversine distance (straight line) as fallback
+func calculateHaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	const earthRadius = 6371 // km
 
 	lat1Rad := lat1 * math.Pi / 180
@@ -81,211 +205,26 @@ func calculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	return earthRadius * c
 }
 
-// Estimate travel costs based on distance
-func EstimateTravelCost(from, to string, numTravelers int) []TravelCost {
-	// Get coordinates
-	fromCoords, err1 := getCoordinates(from)
-	toCoords, err2 := getCoordinates(to)
-
-	if err1 != nil || err2 != nil {
-		return getDefaultCosts(numTravelers)
-	}
-
-	// Calculate distance
-	distance := calculateDistance(fromCoords.Lat, fromCoords.Lon, toCoords.Lat, toCoords.Lon)
-
-	costs := []TravelCost{}
-
-	// Flight estimation (for distances > 300km)
-	if distance > 300 {
-		flightCostPerPerson := estimateFlightCost(distance)
-		flightDuration := estimateFlightDuration(distance)
-		costs = append(costs, TravelCost{
-			Transportation: "Flight",
-			EstimatedCost:  flightCostPerPerson * float64(numTravelers),
-			Currency:       "USD",
-			Duration:       flightDuration,
-			Details:        fmt.Sprintf("$%.2f per person × %d travelers", flightCostPerPerson, numTravelers),
-		})
-	}
-
-	// Train estimation
-	trainCostPerPerson := estimateTrainCost(distance)
-	trainDuration := estimateTrainDuration(distance)
-	costs = append(costs, TravelCost{
-		Transportation: "Train",
-		EstimatedCost:  trainCostPerPerson * float64(numTravelers),
-		Currency:       "USD",
-		Duration:       trainDuration,
-		Details:        fmt.Sprintf("$%.2f per person × %d travelers", trainCostPerPerson, numTravelers),
-	})
-
-	// Bus estimation
-	busCostPerPerson := estimateBusCost(distance)
-	busDuration := estimateBusDuration(distance)
-	costs = append(costs, TravelCost{
-		Transportation: "Bus",
-		EstimatedCost:  busCostPerPerson * float64(numTravelers),
-		Currency:       "USD",
-		Duration:       busDuration,
-		Details:        fmt.Sprintf("$%.2f per person × %d travelers", busCostPerPerson, numTravelers),
-	})
-
-	// Car/Taxi estimation (for shorter distances)
-	if distance < 500 {
-		carCost := estimateCarCost(distance)
-		carDuration := estimateCarDuration(distance)
-		costs = append(costs, TravelCost{
-			Transportation: "Car/Taxi",
-			EstimatedCost:  carCost,
-			Currency:       "USD",
-			Duration:       carDuration,
-			Details:        fmt.Sprintf("Shared cost for group of %d", numTravelers),
-		})
-	}
-
-	return costs
-}
-
-func estimateFlightCost(distance float64) float64 {
-	// Basic flight cost estimation
-	baseCost := 100.0
-	perKmCost := 0.15
-	return baseCost + (distance * perKmCost)
-}
-
-func estimateTrainCost(distance float64) float64 {
-	baseCost := 30.0
-	perKmCost := 0.10
-	return baseCost + (distance * perKmCost)
-}
-
-func estimateBusCost(distance float64) float64 {
-	baseCost := 20.0
-	perKmCost := 0.06
-	return baseCost + (distance * perKmCost)
-}
-
-func estimateCarCost(distance float64) float64 {
-	// Fuel + tolls + parking
-	perKmCost := 0.40
-	return distance * perKmCost
-}
-
-func estimateFlightDuration(distance float64) string {
-	avgSpeed := 800.0 // km/h
-	hours := distance / avgSpeed
+// Format duration in hours to readable string
+func formatDuration(hours float64) string {
 	if hours < 1 {
-		return fmt.Sprintf("%.0f minutes", hours*60)
+		return fmt.Sprintf("%.0f mins", hours*60)
 	}
-	return fmt.Sprintf("%.1f hours", hours)
+	h := int(hours)
+	m := int((hours - float64(h)) * 60)
+	if m > 0 {
+		return fmt.Sprintf("%dh %dm", h, m)
+	}
+	return fmt.Sprintf("%dh", h)
 }
 
-func estimateTrainDuration(distance float64) string {
-	avgSpeed := 120.0 // km/h
-	hours := distance / avgSpeed
-	if hours < 1 {
-		return fmt.Sprintf("%.0f minutes", hours*60)
-	}
-	return fmt.Sprintf("%.1f hours", hours)
-}
-
-func estimateBusDuration(distance float64) string {
-	avgSpeed := 80.0 // km/h
-	hours := distance / avgSpeed
-	if hours < 1 {
-		return fmt.Sprintf("%.0f minutes", hours*60)
-	}
-	return fmt.Sprintf("%.1f hours", hours)
-}
-
-func estimateCarDuration(distance float64) string {
-	avgSpeed := 90.0 // km/h
-	hours := distance / avgSpeed
-	if hours < 1 {
-		return fmt.Sprintf("%.0f minutes", hours*60)
-	}
-	return fmt.Sprintf("%.1f hours", hours)
-}
-
-func getDefaultCosts(numTravelers int) []TravelCost {
-	return []TravelCost{
-		{
-			Transportation: "Flight",
-			EstimatedCost:  300.0 * float64(numTravelers),
-			Currency:       "USD",
-			Duration:       "2-4 hours",
-			Details:        fmt.Sprintf("Average estimate for %d travelers", numTravelers),
-		},
-		{
-			Transportation: "Train",
-			EstimatedCost:  150.0 * float64(numTravelers),
-			Currency:       "USD",
-			Duration:       "4-6 hours",
-			Details:        fmt.Sprintf("Average estimate for %d travelers", numTravelers),
-		},
-		{
-			Transportation: "Bus",
-			EstimatedCost:  80.0 * float64(numTravelers),
-			Currency:       "USD",
-			Duration:       "6-8 hours",
-			Details:        fmt.Sprintf("Average estimate for %d travelers", numTravelers),
-		},
-	}
-}
+// Format travel costs for trip plan (no expenses in main plan)
 func FormatTravelCostsForTripINR(from, to string, numTravelers int) string {
-	// Get coordinates
-	fromCoords, err1 := getCoordinates(from)
-	toCoords, err2 := getCoordinates(to)
-
-	if err1 != nil || err2 != nil {
-		return getDefaultCostsINR(numTravelers)
+	costs, err := CalculateTravelCosts(from, to, numTravelers)
+	if err != nil {
+		return ""
 	}
 
-	// Calculate distance
-	distance := calculateDistance(fromCoords.Lat, fromCoords.Lon, toCoords.Lat, toCoords.Lon)
-
-	costsINR := ""
-
-	// Convert USD to INR (approximate rate: 1 USD = 83 INR)
-	exchangeRate := 83.0
-
-	// Flight estimation (for distances > 300km)
-	if distance > 300 {
-		flightCostPerPerson := estimateFlightCost(distance) * exchangeRate
-		flightDuration := estimateFlightDuration(distance)
-		costsINR += fmt.Sprintf("**Flight:** ₹%.0f per person, Total: ₹%.0f for %d persons (Duration: %s)\n",
-			flightCostPerPerson, flightCostPerPerson*float64(numTravelers), numTravelers, flightDuration)
-	}
-
-	// Train estimation
-	trainCostPerPerson := estimateTrainCost(distance) * exchangeRate
-	trainDuration := estimateTrainDuration(distance)
-	costsINR += fmt.Sprintf("**Train:** ₹%.0f per person, Total: ₹%.0f for %d persons (Duration: %s)\n",
-		trainCostPerPerson, trainCostPerPerson*float64(numTravelers), numTravelers, trainDuration)
-
-	// Bus estimation
-	busCostPerPerson := estimateBusCost(distance) * exchangeRate
-	busDuration := estimateBusDuration(distance)
-	costsINR += fmt.Sprintf("**Bus:** ₹%.0f per person, Total: ₹%.0f for %d persons (Duration: %s)\n",
-		busCostPerPerson, busCostPerPerson*float64(numTravelers), numTravelers, busDuration)
-
-	// Car/Taxi estimation
-	if distance < 500 {
-		carCost := estimateCarCost(distance) * exchangeRate
-		carDuration := estimateCarDuration(distance)
-		costsINR += fmt.Sprintf("**Car/Taxi:** ₹%.0f total for group of %d (Duration: %s)\n",
-			carCost, numTravelers, carDuration)
-	}
-
-	return costsINR
-}
-
-func getDefaultCostsINR(numTravelers int) string {
-	return fmt.Sprintf(`**Flight:** ₹15,000 per person, Total: ₹%.0f for %d persons
-**Train:** ₹5,000 per person, Total: ₹%.0f for %d persons
-**Bus:** ₹3,000 per person, Total: ₹%.0f for %d persons`,
-		15000.0*float64(numTravelers), numTravelers,
-		5000.0*float64(numTravelers), numTravelers,
-		3000.0*float64(numTravelers), numTravelers)
+	// Return formatted string with distance info only (no costs shown to Groq)
+	return fmt.Sprintf(`Distance between %s and %s: %.2f km`, from, to, costs.Distance)
 }

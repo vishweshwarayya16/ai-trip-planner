@@ -33,11 +33,19 @@ function Login() {
         formData
       );
 
-      const { token, userid, username, firstname, lastname } = response.data;
-      login(token, { userid, username, firstname, lastname });
+      const { token, userid, username, firstname, lastname, email, role } = response.data;
+      login(token, { userid, username, firstname, lastname, email, role });
       navigate('/');
     } catch (err) {
-      setError(err.response?.data || 'Login failed. Please try again.');
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err.response?.data) {
+        setError(typeof err.response.data === 'string' ? err.response.data : 'Login failed. Please try again.');
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Login failed. Please check your credentials and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -91,6 +99,22 @@ function Login() {
           <p className="auth-footer">
             Don't have an account? <Link to="/register">Register here</Link>
           </p>
+
+          <p className="auth-footer">
+            Travel agency partner? <Link to="/agency/login">Access the agency portal</Link>
+          </p>
+
+          <div className="admin-login-divider">
+            <span>or</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/admin-login')}
+            className="admin-login-link"
+          >
+            🛡️ Login as Admin
+          </button>
         </form>
       </div>
     </div>

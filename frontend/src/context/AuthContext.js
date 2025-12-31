@@ -27,10 +27,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (token, userData) => {
+    const normalizedUser = {
+      ...userData,
+      role: userData.role || 'user'
+    };
     setToken(token);
-    setUser(userData);
+    setUser(normalizedUser);
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(normalizedUser));
   };
 
   const logout = () => {

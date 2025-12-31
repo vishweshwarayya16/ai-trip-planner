@@ -12,6 +12,8 @@ function Register() {
     password: '',
     confirmPassword: ''
   });
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState(1); // 1: form, 2: OTP verification
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
@@ -54,10 +56,17 @@ function Register() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSendOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Basic validation
+    if (!formData.email || !formData.firstname || !formData.lastname || !formData.username) {
+      setError('Please fill in all required fields');
+      setLoading(false);
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -72,6 +81,52 @@ function Register() {
     }
 
     try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/send-registration-otp`,
+        {
+          email: formData.email,
+          name: `${formData.firstname} ${formData.lastname}`
+        }
+      );
+      setStep(2);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data || 'Failed to send OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (!otp || otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/verify-registration-otp`,
+        {
+          email: formData.email,
+          otp: otp
+        }
+      );
+      // OTP verified, proceed with registration
+      await handleRegister();
+    } catch (err) {
+      setError(err.response?.data || 'Invalid OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/register`,
         {
@@ -83,15 +138,62 @@ function Register() {
         }
       );
 
-      const { token, userid, username } = response.data;
-      login(token, { userid, username, firstname: formData.firstname, lastname: formData.lastname });
+      const { token, userid, username, firstname, lastname, email, role } = response.data;
+      login(token, { userid, username, firstname, lastname, email, role });
       navigate('/');
     } catch (err) {
       setError(err.response?.data || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
+      throw err;
     }
   };
+
+  if (step === 2) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <h2 className="auth-title">Verify Your Email</h2>
+          <p className="auth-subtitle">Enter the 6-digit code sent to {formData.email}</p>
+          
+          <form onSubmit={handleVerifyOTP} className="auth-form">
+            <div className="form-group">
+              <label>OTP Code</label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => {
+                  setOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
+                  setError('');
+                }}
+                required
+                placeholder="000000"
+                maxLength="6"
+                style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem' }}
+              />
+              <small className="form-hint">Check your email for the verification code</small>
+            </div>
+
+            {error && <p className="error-message">{error}</p>}
+
+            <button type="submit" className="auth-button" disabled={loading}>
+              {loading ? 'Verifying...' : 'Verify & Register'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStep(1);
+                setOtp('');
+                setError('');
+              }}
+              className="link-button"
+            >
+              ← Back to form
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">
@@ -99,31 +201,29 @@ function Register() {
         <h2 className="auth-title">Create Account</h2>
         <p className="auth-subtitle">Join AI Trip Planner today</p>
         
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label>First Name</label>
-              <input
-                type="text"
-                name="firstname"
-                value={formData.firstname}
-                onChange={handleChange}
-                required
-                placeholder="John"
-              />
-            </div>
+        <form onSubmit={handleSendOTP} className="auth-form">
+          <div className="form-group">
+            <label>First Name</label>
+            <input
+              type="text"
+              name="firstname"
+              value={formData.firstname}
+              onChange={handleChange}
+              required
+              placeholder="John"
+            />
+          </div>
 
-            <div className="form-group">
-              <label>Last Name</label>
-              <input
-                type="text"
-                name="lastname"
-                value={formData.lastname}
-                onChange={handleChange}
-                required
-                placeholder="Doe"
-              />
-            </div>
+          <div className="form-group">
+            <label>Last Name</label>
+            <input
+              type="text"
+              name="lastname"
+              value={formData.lastname}
+              onChange={handleChange}
+              required
+              placeholder="Doe"
+            />
           </div>
 
           <div className="form-group">
@@ -185,11 +285,14 @@ function Register() {
           {error && <p className="error-message">{error}</p>}
 
           <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Register'}
+            {loading ? 'Sending OTP...' : 'Send OTP & Continue'}
           </button>
 
           <p className="auth-footer">
             Already have an account? <Link to="/login">Login here</Link>
+          </p>
+          <p className="auth-footer">
+            Travel agency? <Link to="/agency/register">Register your agency</Link>
           </p>
         </form>
       </div>
