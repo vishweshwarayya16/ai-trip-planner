@@ -102,113 +102,70 @@ function Contact() {
 
         {error && <p className="error-message">{error}</p>}
 
-        <div className="contact-layout">
-          <div className="contact-form-section">
-            <form onSubmit={handleSubmit} className="contact-form">
-              <div className="form-group">
-                <label>Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="Your name"
-                  readOnly={isAuthenticated}
-                  className={isAuthenticated ? 'input-readonly' : ''}
-                />
-                {isAuthenticated && (
-                  <span className="field-locked-hint">🔒 Auto-filled from your account</span>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="your.email@example.com"
-                  readOnly={isAuthenticated}
-                  className={isAuthenticated ? 'input-readonly' : ''}
-                />
-                {isAuthenticated && (
-                  <span className="field-locked-hint">🔒 Auto-filled from your account</span>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>Subject</label>
-                <input
-                  type="text"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  required
-                  placeholder="What is this about?"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Message</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  required
-                  rows="6"
-                  placeholder="Tell us more..."
-                />
-              </div>
-
-              <button type="submit" className="submit-button" disabled={loading}>
-                {loading ? 'Sending...' : 'Send Message'}
-              </button>
-            </form>
-          </div>
-
-          <div className="contact-info-section">
-            <h3>Get in Touch</h3>
-            <div className="contact-info">
-              <div className="contact-item">
-                <span className="contact-icon">📧</span>
-                <div>
-                  <h4>Email</h4>
-                  <p>support@aitripplanner.com</p>
-                </div>
-              </div>
-
-              <div className="contact-item">
-                <span className="contact-icon">💬</span>
-                <div>
-                  <h4>Live Chat</h4>
-                  <p>Available Mon-Fri, 9am-5pm EST</p>
-                </div>
-              </div>
-
-              <div className="contact-item">
-                <span className="contact-icon">🌐</span>
-                <div>
-                  <h4>Social Media</h4>
-                  <p>Follow us @aitripplanner</p>
-                </div>
-              </div>
+        <div className="contact-form-container">
+          <form onSubmit={handleSubmit} className="contact-form">
+            <div className="form-group">
+              <label>Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="Your name"
+                readOnly={isAuthenticated}
+                className={isAuthenticated ? 'input-readonly' : ''}
+              />
+              {isAuthenticated && (
+                <span className="field-locked-hint">🔒 Auto-filled from your account</span>
+              )}
             </div>
 
-            <div className="faq-section">
-              <h4>Quick FAQ</h4>
-              <div className="faq-item">
-                <strong>How does AI Trip Planner work?</strong>
-                <p>Simply enter your travel details and our AI creates a personalized itinerary.</p>
-              </div>
-              <div className="faq-item">
-                <strong>Is it free to use?</strong>
-                <p>Yes! Creating an account and generating trips is completely free.</p>
-              </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="your.email@example.com"
+                readOnly={isAuthenticated}
+                className={isAuthenticated ? 'input-readonly' : ''}
+              />
+              {isAuthenticated && (
+                <span className="field-locked-hint">🔒 Auto-filled from your account</span>
+              )}
             </div>
-          </div>
+
+            <div className="form-group">
+              <label>Subject</label>
+              <input
+                type="text"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                required
+                placeholder="What is this about?"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Message</label>
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                required
+                rows="6"
+                placeholder="Tell us more..."
+              />
+            </div>
+
+            <button type="submit" className="submit-button" disabled={loading}>
+              {loading ? 'Sending...' : 'Send Message'}
+            </button>
+          </form>
         </div>
       </div>
     </div>

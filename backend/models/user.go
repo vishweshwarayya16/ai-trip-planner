@@ -54,6 +54,8 @@ type TravelPackage struct {
 	PackageID          int       `json:"package_id"`
 	AgencyID           int       `json:"agency_id"`
 	AgencyName         string    `json:"agency_name"`
+	AgencyEmail        string    `json:"agency_email"`
+	AgencyPhone        string    `json:"agency_phone"`
 	Title              string    `json:"title"`
 	Description        string    `json:"description"`
 	Location           string    `json:"location"`

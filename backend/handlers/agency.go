@@ -556,7 +556,9 @@ func GetPublicTravelPackages(w http.ResponseWriter, r *http.Request) {
 					 p.created_at,
 					 p.updated_at,
 					 a.agency_id,
-					 a.name
+					 a.name,
+					 COALESCE(a.email, '') as agency_email,
+					 COALESCE(a.phone, '') as agency_phone
 			  FROM travel_packages p
 			  INNER JOIN travel_agencies a ON p.agency_id = a.agency_id
 			  WHERE p.is_active = TRUE
@@ -589,6 +591,8 @@ func GetPublicTravelPackages(w http.ResponseWriter, r *http.Request) {
 			&pkg.UpdatedAt,
 			&pkg.AgencyID,
 			&pkg.AgencyName,
+			&pkg.AgencyEmail,
+			&pkg.AgencyPhone,
 		); err != nil {
 			continue
 		}

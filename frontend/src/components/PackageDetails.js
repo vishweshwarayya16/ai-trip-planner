@@ -236,6 +236,46 @@ function PackageDetails() {
           )}
         </div>
 
+        {/* Contact Details Section */}
+        <div className="contact-details-section">
+          <h3 className="section-title">📞 Contact Details</h3>
+          <div className="contact-details-grid">
+            <div className="contact-item">
+              <span className="contact-icon">🏢</span>
+              <div className="contact-content">
+                <span className="contact-label">Agency Name</span>
+                <span className="contact-value">{pkg.agency_name}</span>
+              </div>
+            </div>
+            <div className="contact-item">
+              <span className="contact-icon">📧</span>
+              <div className="contact-content">
+                <span className="contact-label">Email</span>
+                <span className="contact-value">
+                  {pkg.agency_email ? (
+                    <a href={`mailto:${pkg.agency_email}`} className="contact-link">
+                      {pkg.agency_email}
+                    </a>
+                  ) : 'Not available'}
+                </span>
+              </div>
+            </div>
+            <div className="contact-item">
+              <span className="contact-icon">📱</span>
+              <div className="contact-content">
+                <span className="contact-label">Phone</span>
+                <span className="contact-value">
+                  {pkg.agency_phone ? (
+                    <a href={`tel:${pkg.agency_phone}`} className="contact-link">
+                      {pkg.agency_phone}
+                    </a>
+                  ) : 'Not available'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Agency Feedbacks Section */}
         {agencyFeedbacks.length > 0 && (
           <div className="agency-feedbacks-section">

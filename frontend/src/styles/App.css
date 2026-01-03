@@ -867,6 +867,11 @@ body {
 }
 
 /* Contact Page */
+.contact-form-container {
+  max-width: 600px;
+  margin: 2rem auto 0;
+}
+
 .contact-layout {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
@@ -4089,6 +4094,116 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 /* ========================================
+   CONTACT DETAILS IN PACKAGE DETAILS
+   ======================================== */
+
+.contact-details-section {
+  margin-top: 32px;
+  padding: 28px;
+  background: linear-gradient(145deg, rgba(26, 32, 44, 0.95), rgba(45, 55, 72, 0.95));
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.contact-details-section .section-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.contact-item:hover {
+  transform: translateY(-3px);
+  border-color: rgba(66, 153, 225, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.contact-icon {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.2), rgba(49, 130, 206, 0.1));
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.contact-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.contact-value {
+  font-size: 1.05rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.contact-link {
+  color: #63b3ed;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.contact-link:hover {
+  color: #90cdf4;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .contact-details-section {
+    padding: 20px;
+    margin-top: 24px;
+  }
+  
+  .contact-details-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .contact-item {
+    padding: 14px 18px;
+  }
+  
+  .contact-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.6rem;
+  }
+}
+
+/* ========================================
    AGENCY FEEDBACKS IN PACKAGE DETAILS
    ======================================== */
 
@@ -4704,6 +4819,11 @@ input[type="number"]::-webkit-outer-spin-button {
   margin-bottom: 40px;
 }
 
+.admin-role-section .section-heading {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .role-card.admin-role {
   background: linear-gradient(145deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
   border: 1px solid rgba(59, 130, 246, 0.2);
@@ -4719,8 +4839,25 @@ input[type="number"]::-webkit-outer-spin-button {
   background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
 }
 
+.role-card.admin-role h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.role-card.admin-role p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .admin-actions-section {
   margin-bottom: 40px;
+}
+
+.admin-actions-section .section-heading {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .action-card.admin-action {
@@ -4738,11 +4875,27 @@ input[type="number"]::-webkit-outer-spin-button {
   color: #3b82f6;
 }
 
+.action-card.admin-action h4 {
+  color: #ffffff;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.action-card.admin-action p {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.9rem;
+}
+
 .admin-responsibilities-section {
   background: linear-gradient(145deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
   border-radius: 16px;
   padding: 30px;
   border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.admin-responsibilities-section .section-heading {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .responsibilities-container {
